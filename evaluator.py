@@ -31,6 +31,9 @@ class Evaluator(object):
                 action = policy(observation)
 
                 observation, reward, done, info = env.step(action)
+                if episode == 0:
+                    env.render()
+
                 if self.max_episode_length and episode_steps >= self.max_episode_length -1:
                     done = True
                 

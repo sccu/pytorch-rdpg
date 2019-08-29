@@ -69,7 +69,7 @@ class RDPG(object):
                 state, reward, done, info = self.env.step(action)
                 state = deepcopy(state)
 
-                self.env.render()
+                #self.env.render()
 
                 # agent observe and update policy
                 self.memory.append(state0, action, reward, done)

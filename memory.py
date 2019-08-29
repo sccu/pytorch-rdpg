@@ -19,7 +19,7 @@ def sample_batch_indexes(low, high, size):
         # the memory grows. See https://github.com/numpy/numpy/issues/2764 for a discussion.
         # `random.sample` does the same thing (drawing without replacement) and is way faster.
         try:
-            r = xrange(low, high)
+            r = range(low, high)
         except NameError:
             r = range(low, high)
         batch_idxs = random.sample(r, size)
@@ -292,7 +292,7 @@ class EpisodicMemory(Memory):
         T = len(mem)
         if T > 0:
             # Take a random subset of trajectory if maxlen specified, otherwise return full trajectory
-            if maxlen > 0 and T > maxlen + 1:
+            if maxlen and maxlen > 0 and T > maxlen + 1:
                 t = random.randrange(T - maxlen - 1)  # Include next state after final "maxlen" state
                 return mem[t:t + maxlen + 1]
             else:

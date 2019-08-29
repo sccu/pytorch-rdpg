@@ -9,7 +9,7 @@ from evaluator import Evaluator
 from rdpg import RDPG
 from util import *
 
-gym.undo_logger_setup()
+#gym.undo_logger_setup()
 
 if __name__ == "__main__":
 
@@ -33,7 +33,7 @@ if __name__ == "__main__":
     parser.add_argument('--validate_episodes', default=20, type=int, help='how many episode to perform during validate experiment')
     parser.add_argument('--max_episode_length', default=500, type=int, help='')
     parser.add_argument('--trajectory_length', default=5, type=int, help='')
-    parser.add_argument('--validate_steps', default=2000, type=int, help='how many steps to perform a validate experiment')
+    parser.add_argument('--validate_steps', default=4000, type=int, help='how many steps to perform a validate experiment')
     parser.add_argument('--debug', dest='debug', action='store_true')
     parser.add_argument('--init_w', default=0.003, type=float, help='') 
     parser.add_argument('--train_iter', default=20000000, type=int, help='train iters each timestep')
