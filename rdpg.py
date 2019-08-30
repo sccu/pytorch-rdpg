@@ -11,6 +11,8 @@ from evaluator import Evaluator
 from memory import EpisodicMemory
 from agent import Agent
 from util import *
+from utils import Aggregator
+from torch.utils.tensorboard import SummaryWriter
 
 class RDPG(object):
     def __init__(self, env, nb_states, nb_actions, args):
@@ -28,6 +30,7 @@ class RDPG(object):
 
         self.critic_optim  = Adam(self.agent.critic.parameters(), lr=args.rate)
         self.actor_optim  = Adam(self.agent.actor.parameters(), lr=args.prate)
+        self.prediction_optim  = Adam(self.agent.reward_predictor.parameters(), lr=args.rate)
 
         # Hyper-parameters
         self.batch_size = args.bsize
@@ -46,11 +49,14 @@ class RDPG(object):
         # 
         if USE_CUDA: self.cuda()
  
-    def train(self, num_iterations, checkpoint_path, debug):
+    def train(self, num_iterations, checkpoint_path, args):
+        debug = args.debug
         self.agent.is_training = True
         step = episode = episode_steps = trajectory_steps = 0
         episode_reward = 0.
         state0 = None
+        agg = Aggregator()
+        writer = SummaryWriter(comment=args.comment)
         while step < num_iterations:
             episode_steps = 0
             while episode_steps < self.max_episode_length:
@@ -85,14 +91,16 @@ class RDPG(object):
                     self.agent.reset_lstm_hidden_state(done=False)
                     trajectory_steps = 0
                     if step > self.warmup:
-                        self.update_policy()
+                        self.update_policy(agg)
 
                 # [optional] save intermideate model
                 if step % int(num_iterations/3) == 0:
                     self.agent.save_model(checkpoint_path)
 
                 if done: # end of episode
-                    if debug: prGreen('#{}: episode_reward:{} steps:{}'.format(episode,episode_reward,step))
+                    if debug:
+                        prGreen('#{}: episode_reward:{} steps:{}'.format(episode,episode_reward,step))
+                        agg(reward=episode_reward)
 
                     # reset
                     state0 = None
@@ -105,14 +113,19 @@ class RDPG(object):
             if self.evaluate is not None and self.validate_steps > 0 and step % self.validate_steps == 0:
                 policy = lambda x: self.agent.select_action(x, decay_epsilon=False)
                 validate_reward = self.evaluate(self.env, policy, debug=False, visualize=False)
-                if debug: prYellow('[Evaluate] Step_{:07d}: mean_reward:{}'.format(step, validate_reward))
+                if debug:
+                    prYellow('[Evaluate] Step_{:07d}: mean_reward:{}'.format(step, validate_reward))
+
+                    writer.add_scalar("train/reward", agg.reward, step)
+                    writer.add_scalar("val/reward", validate_reward, step)
+                    writer.add_scalar("train/prediction_loss", agg.prediction_loss, step)
+                    agg.reset()
 
 #            if step >= args.warmup and episode > args.bsize:
 #                # Update weights
 #                agent.update_policy()
 
-
-    def update_policy(self):
+    def update_policy(self, aggregator=None):
         # Sample batch
         experiences = self.memory.sample(self.batch_size)
         if len(experiences) == 0: # not enough samples
@@ -120,6 +133,7 @@ class RDPG(object):
 
         policy_loss_total = 0
         value_loss_total = 0
+        prediction_loss_total = 0
         for t in range(len(experiences) - 1): # iterate over episodes
             target_cx = Variable(torch.zeros(self.batch_size, 50)).type(FLOAT)
             target_hx = Variable(torch.zeros(self.batch_size, 50)).type(FLOAT)
@@ -129,11 +143,17 @@ class RDPG(object):
 
             # we first get the data out of the sampled experience
             state0 = np.stack((trajectory.state0 for trajectory in experiences[t]))
-            # action = np.expand_dims(np.stack((trajectory.action for trajectory in experiences[t])), axis=1)
             action = np.stack((trajectory.action for trajectory in experiences[t]))
             reward = np.expand_dims(np.stack((trajectory.reward for trajectory in experiences[t])), axis=1)
-            # reward = np.stack((trajectory.reward for trajectory in experiences[t]))
             state1 = np.stack((trajectory.state0 for trajectory in experiences[t+1]))
+
+            reward_pred = self.agent.reward_predictor([to_tensor(state0), to_tensor(action)])
+            prediction_loss = F.mse_loss(reward_pred, to_tensor(reward))
+            if aggregator:
+                aggregator(prediction_loss=prediction_loss.item())
+            self.agent.reward_predictor.zero_grad()
+            prediction_loss.backward()
+            self.prediction_optim.step()
 
             target_action, (target_hx, target_cx) = self.agent.actor_target(to_tensor(state1, volatile=True), (target_hx, target_cx))
             next_q_value = self.agent.critic_target([
@@ -170,7 +190,6 @@ class RDPG(object):
             policy_loss = policy_loss.mean()
             policy_loss.backward()
             self.actor_optim.step()
-
 
         # update only once
 #        policy_loss_total /= self.batch_size # divide by number of trajectories

@@ -33,13 +33,14 @@ if __name__ == "__main__":
     parser.add_argument('--validate_episodes', default=20, type=int, help='how many episode to perform during validate experiment')
     parser.add_argument('--max_episode_length', default=500, type=int, help='')
     parser.add_argument('--trajectory_length', default=5, type=int, help='')
-    parser.add_argument('--validate_steps', default=4000, type=int, help='how many steps to perform a validate experiment')
+    parser.add_argument('--validate_steps', default=20000, type=int, help='how many steps to perform a validate experiment')
     parser.add_argument('--debug', dest='debug', action='store_true')
     parser.add_argument('--init_w', default=0.003, type=float, help='') 
     parser.add_argument('--train_iter', default=20000000, type=int, help='train iters each timestep')
     parser.add_argument('--epsilon', default=50000, type=int, help='linear decay of exploration policy')
     parser.add_argument('--seed', default=-1, type=int, help='')
     parser.add_argument('--checkpoint', default="checkpoints", type=str, help='Checkpoint path')
+    parser.add_argument('--comment', default="_baseline", type=str, help='Tensorboard comment')
 
     args = parser.parse_args()
 
@@ -55,7 +56,7 @@ if __name__ == "__main__":
 
     rdpg = RDPG(env, nb_states, nb_actions, args)
     if args.mode == 'train':
-        rdpg.train(args.train_iter, args.checkpoint, args.debug)
+        rdpg.train(args.train_iter, args.checkpoint, args)
     elif args.mode == 'test':
         rdpg.test(args.validate_episodes, args.checkpoint, visualize=True, debug=args.debug)
     else:

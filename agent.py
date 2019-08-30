@@ -12,6 +12,7 @@ from util import *
 
 criterion = nn.MSELoss()
 
+
 class Agent(object):
     def __init__(self, nb_states, nb_actions, args):
         if args.seed > 0:
@@ -26,6 +27,8 @@ class Agent(object):
 
         self.critic = Critic(self.nb_states, self.nb_actions, args.init_w)
         self.critic_target = Critic(self.nb_states, self.nb_actions, args.init_w)
+
+        self.reward_predictor = Critic(self.nb_states, self.nb_actions, args.init_w)
 
         hard_update(self.actor_target, self.actor) # Make sure target is with the same weight
         hard_update(self.critic_target, self.critic)
