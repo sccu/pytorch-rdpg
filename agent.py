@@ -83,6 +83,7 @@ class Agent(object):
         self.actor_target.cuda()
         self.critic.cuda()
         self.critic_target.cuda()
+        self.reward_predictor.cuda()
 
     def load_weights(self, output):
         if output is None: return False

@@ -41,8 +41,13 @@ if __name__ == "__main__":
     parser.add_argument('--seed', default=-1, type=int, help='')
     parser.add_argument('--checkpoint', default="checkpoints", type=str, help='Checkpoint path')
     parser.add_argument('--comment', default="_baseline", type=str, help='Tensorboard comment')
+    parser.add_argument('--cuda', dest='cuda', action='store_true')
 
     args = parser.parse_args()
+
+    global USE_CUDA
+    USE_CUDA = args.cuda
+    print(USE_CUDA)
 
     # env = NormalizedEnv(gym.make(args.env))
     env = gym.make(args.env)

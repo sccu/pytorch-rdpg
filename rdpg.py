@@ -14,6 +14,7 @@ from util import *
 from utils import Aggregator
 from torch.utils.tensorboard import SummaryWriter
 
+
 class RDPG(object):
     def __init__(self, env, nb_states, nb_actions, args):
         if args.seed > 0:
@@ -47,7 +48,7 @@ class RDPG(object):
         self.is_training = True
 
         # 
-        if USE_CUDA: self.cuda()
+        if USE_CUDA: self.agent.cuda()
  
     def train(self, num_iterations, checkpoint_path, args):
         debug = args.debug
