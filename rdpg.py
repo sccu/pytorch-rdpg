@@ -100,8 +100,10 @@ class RDPG(object):
 
                 if done: # end of episode
                     if debug:
-                        prGreen('#{}: episode_reward:{} steps:{}'.format(episode,episode_reward,step))
                         agg(reward=episode_reward)
+                        prGreen(
+                            '#{}: episode_reward:{} steps:{}'.format(
+                                episode, episode_reward, step))
 
                     # reset
                     state0 = None
@@ -111,11 +113,13 @@ class RDPG(object):
                     break
 
             # [optional] evaluate
-            if self.evaluate is not None and self.validate_steps > 0 and step % self.validate_steps == 0:
+            if self.evaluate is not None and self.validate_steps > 0 and step % self.validate_steps == 0 and step > args.warmup:
                 policy = lambda x: self.agent.select_action(x, decay_epsilon=False)
-                validate_reward = self.evaluate(self.env, policy, debug=False, visualize=False)
+                validate_reward = self.evaluate(self.env, policy, debug=False, visualize=args.visualize)
                 if debug:
-                    prYellow('[Evaluate] Step_{:07d}: mean_reward:{}'.format(step, validate_reward))
+                    prYellow(
+                        '[Evaluate] Step_{:07d}: mean_reward:{} speed:{:.2f} steps/s'.format(
+                            step, validate_reward, agg.speed("prediction_loss")))
 
                     writer.add_scalar("train/reward", agg.reward, step)
                     writer.add_scalar("val/reward", validate_reward, step)
