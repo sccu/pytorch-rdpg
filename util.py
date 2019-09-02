@@ -3,7 +3,7 @@ import os
 import torch
 from torch.autograd import Variable
 
-USE_CUDA = False #torch.cuda.is_available()
+USE_CUDA = torch.cuda.is_available()
 FLOAT = torch.cuda.FloatTensor if USE_CUDA else torch.FloatTensor
 
 def prRed(prt): print("\033[91m {}\033[00m" .format(prt))
