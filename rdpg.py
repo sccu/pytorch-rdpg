@@ -124,6 +124,8 @@ class RDPG(object):
                     writer.add_scalar("train/reward", agg.reward, step)
                     writer.add_scalar("val/reward", validate_reward, step)
                     writer.add_scalar("train/prediction_loss", agg.prediction_loss, step)
+                    writer.add_scalar("train/value_loss", agg.value_loss, step)
+                    writer.add_scalar("train/policy_loss", agg.policy_loss, step)
                     agg.reset()
 
 #            if step >= args.warmup and episode > args.bsize:
