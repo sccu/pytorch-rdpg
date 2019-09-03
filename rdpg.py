@@ -187,8 +187,8 @@ class RDPG(object):
             policy_loss_total += policy_loss.mean()
 
             if aggregator:
-                aggregator(policy_loss=policy_loss.item())
-                aggregator(value_loss=value_loss.item())
+                aggregator(policy_loss=policy_loss.mean().item())
+                aggregator(value_loss=value_loss.mean().item())
 
             # update per trajectory
             self.agent.critic.zero_grad()
