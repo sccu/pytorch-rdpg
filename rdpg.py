@@ -186,6 +186,10 @@ class RDPG(object):
             policy_loss /= len(experiences) # divide by trajectory length
             policy_loss_total += policy_loss.mean()
 
+            if aggregator:
+                aggregator(policy_loss=policy_loss.item())
+                aggregator(value_loss=value_loss.item())
+
             # update per trajectory
             self.agent.critic.zero_grad()
             value_loss.backward()
