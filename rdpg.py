@@ -76,7 +76,7 @@ class RDPG(object):
                 state, reward, done, info = self.env.step(action)
                 state = deepcopy(state)
 
-                #self.env.render()
+                # self.env.render()
 
                 # agent observe and update policy
                 self.memory.append(state0, action, reward, done)
@@ -113,7 +113,7 @@ class RDPG(object):
                     break
 
             # [optional] evaluate
-            if self.evaluate is not None and self.validate_steps > 0 and step % self.validate_steps == 0 and step > args.warmup:
+            if self.validate_steps > 0 and episode % 10 == 0 and step > args.warmup:
                 policy = lambda x: self.agent.select_action(x, decay_epsilon=False)
                 validate_reward = self.evaluate(self.env, policy, debug=False, visualize=args.visualize)
                 if debug:
@@ -142,11 +142,11 @@ class RDPG(object):
         value_loss_total = 0
         prediction_loss_total = 0
         for t in range(len(experiences) - 1): # iterate over episodes
-            target_cx = Variable(torch.zeros(self.batch_size, 50)).type(FLOAT)
-            target_hx = Variable(torch.zeros(self.batch_size, 50)).type(FLOAT)
+            target_cx = Variable(torch.zeros(self.batch_size, 300)).type(FLOAT)
+            target_hx = Variable(torch.zeros(self.batch_size, 300)).type(FLOAT)
 
-            cx = Variable(torch.zeros(self.batch_size, 50)).type(FLOAT)
-            hx = Variable(torch.zeros(self.batch_size, 50)).type(FLOAT)
+            cx = Variable(torch.zeros(self.batch_size, 300)).type(FLOAT)
+            hx = Variable(torch.zeros(self.batch_size, 300)).type(FLOAT)
 
             # we first get the data out of the sampled experience
             state0 = np.stack((trajectory.state0 for trajectory in experiences[t]))
@@ -172,7 +172,7 @@ class RDPG(object):
             target_q = to_tensor(reward) + self.discount*next_q_value
 
             # Critic update
-            current_q = self.agent.critic([ to_tensor(state0), to_tensor(action) ])
+            current_q = self.agent.critic([ to_tensor(state0), to_tensor(action)])
 
             # value_loss = criterion(q_batch, target_q_batch)
             value_loss = F.smooth_l1_loss(current_q, target_q)
